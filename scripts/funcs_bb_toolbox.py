@@ -196,7 +196,7 @@ def gather_data(path_obs, files_name_old, files_name_new):
     for i in range(0, len(files_name_new)):
         date_bb_new[i],water_temp_new[i], bluebottles_new[i], description_new[i] = GetVariables(beach_new[i],'new')
     
-    
+
     #delete data before 05/2016
     date[0]=date_bb[0]
     date[1]=date_bb[1][:1036] 
@@ -212,6 +212,7 @@ def gather_data(path_obs, files_name_old, files_name_new):
     description[2]=description[2][:1025] 
     
     #concatenate variables from old and new files
+
     
     for i in range(0,3):
         date[i] = np.concatenate([date[i], date_bb_new[i]])

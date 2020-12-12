@@ -18,9 +18,15 @@ from funcs_bb_analysis import *
 #%% import files  define paths
 path_figs = '../figs/'
 path_obs = '../data/'
-files_name_old = glob.glob(path_obs+'bluebottle_lifeguard_reports/*2.xlsx') #0Clovelly 1Coogee 2Maroubra
-files_name_new = glob.glob(path_obs+'bluebottle_lifeguard_reports/*3.xlsx') #0Clovelly 1Coogee 2Maroubra
-
+files_name_old = [glob.glob(path_obs+'bluebottle_lifeguard_reports/Clov*2.xlsx')[0],
+                  glob.glob(path_obs+'bluebottle_lifeguard_reports/Coo*2.xlsx')[0],
+                  glob.glob(path_obs+'bluebottle_lifeguard_reports/Mar*2.xlsx')[0]]
+                  
+files_name_new = [glob.glob(path_obs+'bluebottle_lifeguard_reports/*Clov*3.xlsx')[0],
+                  glob.glob(path_obs+'bluebottle_lifeguard_reports/*Coo*3.xlsx')[0],
+                  glob.glob(path_obs+'bluebottle_lifeguard_reports/*Mar*3.xlsx')[0]]
+  
+                   
 #gather old and new lifeguard reports
 date, water_temp, bluebottles, description = gather_data(path_obs, 
                                                          files_name_old, 
