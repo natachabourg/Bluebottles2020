@@ -227,6 +227,7 @@ def seasonal_cycle_plot(nb_beach,path_fig,
     
     fig, (ax2,ax,ax_new) = plt.subplots(3,1,figsize=(7,10))
     ax1 = ax.twinx()
+    ax.text(0,45,'B',fontweight='bold',fontsize=22)
     ax.set_ylabel('Frequency of beaching events [%]', fontsize=10)
     bins=np.arange(1,54)
     ax.set_xticks(bins[:-1])
@@ -282,6 +283,8 @@ def seasonal_cycle_plot(nb_beach,path_fig,
     ax3 = ax2.twinx()
     #ax2.set_ylabel('Frequency of beaching events [%]', fontsize=10)
     bins=np.arange(1,54)
+    ax2.text(0,45,'A',fontweight='bold',fontsize=22)
+
     ax2.set_xticks(bins[:-1])
     #ax2.set_xlabel('Week #',fontsize=10)
     ax2.bar(week,mean,width=0.4,color='slategray',align='center',label='observed',alpha=0.8)
@@ -328,6 +331,8 @@ def seasonal_cycle_plot(nb_beach,path_fig,
     bins=np.arange(1,54)
     ax_new.set_xticks(bins[:-1])
     ax_new.set_xlabel('Week #',fontsize=10)
+    ax_new.text(0,45,'C',fontweight='bold',fontsize=22)
+
     ax_new.bar(week,mean,width=0.4,color='slategray',align='center',label='observed',alpha=0.8)
     #ax_new.plot(week,mean,color='black',label='observed',alpha=0.6)
     ax_new.fill_between(week, mean-std, mean+std,color='lightgrey',alpha=0.4)
