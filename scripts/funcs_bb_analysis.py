@@ -773,7 +773,7 @@ def summer_rose_plot_map(date_summer_stings,date_summer,bb_summer,date_BOM,ws,wd
                                 linewidth=2),
                                 zorder=1
                 )
-#    fig.savefig(folder+'fig_map_rose.pdf')      
+    fig.savefig(folder+'fig_map_rose.pdf')      
     
     
     
