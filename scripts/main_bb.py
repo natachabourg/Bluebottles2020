@@ -52,8 +52,13 @@ i_observed] = dates_observed_none(bluebottles, date, date_BOM)
 date_summer = [ date[i][np.isin(date[i], summer(date[i]))] for i in range(0,3)]
 bb_summer = [ bluebottles[i][np.isin(date[i], summer(date[i]))] for i in range(0,3)]
 
-
-
+#Read stings data
+file_stings = pd.read_excel(path_obs+'bluebottle_lifeguard_reports/bluebottle_database_daniel.xlsx',
+                            sheet_name = 'Sting Reports')
+date_stings = [file_stings.Date[file_stings.Clovelly>0],
+               file_stings.Date[file_stings['Coogee (NSW)']>0],
+               file_stings.Date[file_stings.Maroubra>0]]
+date_summer_stings = [summer(d) for d in date_stings]
 
 #%% start seasonality  analysis
 
@@ -83,7 +88,7 @@ corr=correlation_btwn_variables(2,"../figs/",
 
 
 #PLOT MAP WITH WIND CONDITIONS FOR BEACHING 
-summer_rose_plot_map(date_summer,bb_summer,date_BOM,ws,wd_meteo_deg,
+summer_rose_plot_map(date_summer_stings,date_summer,bb_summer,date_BOM,ws,wd_meteo_deg,
                      folder="../figs/",path_data="../data/")
 
 

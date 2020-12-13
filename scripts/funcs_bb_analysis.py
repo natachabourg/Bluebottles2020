@@ -493,9 +493,11 @@ def chances_of_beachings_wd(wd, date_BOM, date_none, date_obs, beach):
     return chances_NE, chances_SE, chances_SW, chances_NW
 
 
-def summer_rose_plot_map(date_summer,bb_summer,date_BOM,ws,wd_meteo_deg,folder,path_data):
+def summer_rose_plot_map(date_summer_stings,date_summer,bb_summer,date_BOM,ws,wd_meteo_deg,folder,path_data):
     """
-    Input : lifeguard observations (dates and bb values) for summer
+    Input : 
+    sting observations (date_summer_stings)
+    lifeguard observations (dates and bb values) for summer
     date_BOM array for BOM data
     ws and wd from BOM data
     
@@ -507,14 +509,18 @@ def summer_rose_plot_map(date_summer,bb_summer,date_BOM,ws,wd_meteo_deg,folder,p
     #--- compute wind roses ----#
     wd1 = []
     ws1 =[]
+    
     wd2 = []
     ws2 = []
+    
+    wd3 = []
+    ws3 = []
     for nb_beach in range(0,3):
         location = ['Clovelly', 'Coogee', 'Maroubra']
         
         dates_bb = date_summer[nb_beach]
         bb = bb_summer[nb_beach]
-        
+        dates_stings = np.array([pd.to_datetime(d) for d in date_summer_stings[nb_beach]])
         dates_wind = np.array([pd.to_datetime(d) for d in date_BOM])
         
         one_day = datetime.timedelta(days=1)
@@ -529,25 +535,31 @@ def summer_rose_plot_map(date_summer,bb_summer,date_BOM,ws,wd_meteo_deg,folder,p
         
         i_observed_plus1 = np.isin(dates_wind[:],dates_observed)
         
+        i_stings = np.isin(dates_wind[:],dates_stings)
+        
         wind_speed = ws[i_all]
         wind_speed_obs = ws[i_observed_plus1]
-        
+        ws_stings = ws[i_stings]
         
         direction = wd_meteo_deg[i_all]
         direction_obs = wd_meteo_deg[i_observed_plus1]
+        wd_stings = wd_meteo_deg[i_stings]
+        
         
         df1 = pd.DataFrame({"speed": wind_speed, "direction": direction})
         
         df2 = pd.DataFrame({"speed": wind_speed_obs, "direction": direction_obs})
         
-        
+        df3 = pd.DataFrame({"speed": ws_stings, "direction": wd_stings})
+
         wd2.append(df1['direction'])
         ws2.append(df1['speed'])
         
         wd1.append(df2['direction'])
         ws1.append(df2['speed'])
     
-                            
+        wd3.append(df3['direction'])
+        ws3.append(df3['speed'])                          
         
         
         
@@ -577,10 +589,10 @@ def summer_rose_plot_map(date_summer,bb_summer,date_BOM,ws,wd_meteo_deg,folder,p
     from matplotlib.collections import PatchCollection
     
     c_beach = 'goldenrod'
-    fig, ax = plt.subplots(figsize=(14,10))
+    fig, ax = plt.subplots(figsize=(18,10))
     
     ax.plot(coast[:,0],coast[:,1],'k',lw=3)
-    ax.set_xlim(151.24,151.35)
+    ax.set_xlim(151.24,151.37)
     ax.set_ylim(-33.9639,-33.90)
     ax.plot(c_mar_0[c_mar_0>151.26],c_mar_1[c_mar_0>151.26],
             c=c_beach,
@@ -620,7 +632,7 @@ def summer_rose_plot_map(date_summer,bb_summer,date_BOM,ws,wd_meteo_deg,folder,p
     
     #maroubra
     bins = np.arange(0.01, 12, 2)
-    rect=[0.57,0.15,0.21,0.21] 
+    rect=[0.6,0.15,0.21,0.21] 
     wa=WindroseAxes(fig, rect)
     fig.add_axes(wa)
     wa.bar(wd2[2], ws2[2], normed=True, opening=0.8, edgecolor='white',cmap=cmo.cm.ice,bins=bins)
@@ -631,7 +643,7 @@ def summer_rose_plot_map(date_summer,bb_summer,date_BOM,ws,wd_meteo_deg,folder,p
             verticalalignment='center', transform=wa.transAxes,
             fontsize=14)
     
-    rect1=[0.37, 0.15, 0.21, 0.21]
+    rect1=[0.46, 0.15, 0.21, 0.21]
     wa1=WindroseAxes(fig, rect1)
     fig.add_axes(wa1)
     wa1.bar(wd1[2], ws1[2], normed=True, opening=0.8, edgecolor='white',cmap=cmo.cm.ice,bins=bins)
@@ -640,11 +652,20 @@ def summer_rose_plot_map(date_summer,bb_summer,date_BOM,ws,wd_meteo_deg,folder,p
             fontstyle='oblique',horizontalalignment='center',
             verticalalignment='center', transform=wa1.transAxes,
             fontsize=14)
-    
-    
+
+    rect3=[0.32, 0.15, 0.21, 0.21]
+    wa3=WindroseAxes(fig, rect3)
+    fig.add_axes(wa3)
+    wa3.bar(wd3[2], ws3[2], normed=True, opening=0.8, edgecolor='white',cmap=cmo.cm.ice,bins=bins)
+    wa3.tick_params(labelleft=False, labelbottom=False)
+    wa3.text(0.35,0.91,'STINGS',fontweight='bold',
+            fontstyle='oblique',horizontalalignment='center',
+            verticalalignment='center', transform=wa3.transAxes,
+            fontsize=14)    
+
     #coogee
     bins = np.arange(0.01, 12, 2)
-    rect=[0.55,0.42,0.21,0.21] 
+    rect=[0.6,0.41,0.21,0.21] 
     wa=WindroseAxes(fig, rect)
     fig.add_axes(wa)
     wa.bar(wd2[1], ws2[1], normed=True, opening=0.8, edgecolor='white',cmap=cmo.cm.ice,bins=bins)
@@ -654,7 +675,7 @@ def summer_rose_plot_map(date_summer,bb_summer,date_BOM,ws,wd_meteo_deg,folder,p
             verticalalignment='center', transform=wa.transAxes,
             fontsize=14)
     
-    rect1=[0.35, 0.42, 0.21, 0.21]
+    rect1=[0.45, 0.41, 0.21, 0.21]
     wa1=WindroseAxes(fig, rect1)
     fig.add_axes(wa1)
     wa1.bar(wd1[1], ws1[1], normed=True, opening=0.8, edgecolor='white',cmap=cmo.cm.ice,bins=bins)
@@ -664,11 +685,21 @@ def summer_rose_plot_map(date_summer,bb_summer,date_BOM,ws,wd_meteo_deg,folder,p
             verticalalignment='center', transform=wa1.transAxes,
             fontsize=14)
     
+    rect3=[0.3, 0.41, 0.21, 0.21]
+    wa3=WindroseAxes(fig, rect3)
+    fig.add_axes(wa3)
+    wa3.bar(wd3[1], ws3[1], normed=True, opening=0.8, edgecolor='white',cmap=cmo.cm.ice,bins=bins)
+    wa3.tick_params(labelleft=False, labelbottom=False)
+    wa3.text(0.35,0.91,'STINGS',fontweight='bold',
+            fontstyle='oblique',horizontalalignment='center',
+            verticalalignment='center', transform=wa3.transAxes,
+            fontsize=14)    
+
     
     
     #clovelly
     bins = np.arange(0.01, 12, 2)
-    rect=[0.63,0.655,0.21,0.21] 
+    rect=[0.65,0.655,0.21,0.21] 
     wa=WindroseAxes(fig, rect)
     fig.add_axes(wa)
     wa.bar(wd2[0], ws2[0], normed=True, opening=0.8, edgecolor='white',cmap=cmo.cm.ice,bins=bins)
@@ -678,7 +709,7 @@ def summer_rose_plot_map(date_summer,bb_summer,date_BOM,ws,wd_meteo_deg,folder,p
             verticalalignment='center', transform=wa.transAxes,
             fontsize=14)
     
-    rect1=[0.43, 0.655, 0.21, 0.21]
+    rect1=[0.51, 0.655, 0.21, 0.21]
     wa1=WindroseAxes(fig, rect1)
     fig.add_axes(wa1)
     wa1.bar(wd1[0], ws1[0], normed=True, opening=0.8, edgecolor='white',cmap=cmo.cm.ice,bins=bins)
@@ -688,8 +719,21 @@ def summer_rose_plot_map(date_summer,bb_summer,date_BOM,ws,wd_meteo_deg,folder,p
             verticalalignment='center', transform=wa1.transAxes,
             fontsize=14)
     
+    rect3=[0.37, 0.655, 0.21, 0.21]
+    wa3=WindroseAxes(fig, rect3)
+    fig.add_axes(wa3)
+    wa3.bar(wd3[0], ws3[0], normed=True, opening=0.8, edgecolor='white',cmap=cmo.cm.ice,bins=bins)
+    wa3.tick_params(labelleft=False, labelbottom=False)
+    wa3.text(0.35,0.91,'STINGS',fontweight='bold',
+            fontstyle='oblique',horizontalalignment='center',
+            verticalalignment='center', transform=wa3.transAxes,
+            fontsize=14)    
+
     
-    x, y, arrow_length = 0.96, 0.97, 0.09
+    
+    
+    
+    x, y, arrow_length = 0.95, 0.97, 0.09
     ax.annotate('N', xy=(x, y), xytext=(x, y-arrow_length),
                 arrowprops=dict(facecolor='black', width=5, headwidth=15),
                 ha='center', va='center', fontsize=20,
@@ -729,7 +773,7 @@ def summer_rose_plot_map(date_summer,bb_summer,date_BOM,ws,wd_meteo_deg,folder,p
                                 linewidth=2),
                                 zorder=1
                 )
-    fig.savefig(folder+'fig_map_rose.pdf')      
+#    fig.savefig(folder+'fig_map_rose.pdf')      
     
     
     
