@@ -7,7 +7,6 @@ Created on Fri Dec 11 09:48:52 2020
 
 """
 import os
-
 os.system('python func_bb_toolbox.py')
 os.system('python func_bb_analysis.py')
 
@@ -58,7 +57,17 @@ file_stings = pd.read_excel(path_obs+'bluebottle_lifeguard_reports/bluebottle_da
 date_stings = [file_stings.Date[file_stings.Clovelly>0],
                file_stings.Date[file_stings['Coogee (NSW)']>0],
                file_stings.Date[file_stings.Maroubra>0]]
+
+date_nostings = [file_stings.Date[file_stings.Clovelly==0],
+               file_stings.Date[file_stings['Coogee (NSW)']==0],
+               file_stings.Date[file_stings.Maroubra==0]]
+
 date_summer_stings = [summer(d) for d in date_stings]
+
+#look at moon fractional phase during beachings
+for l in [1,7]:
+    full_moon(date_none[0],date_observed[0],l,'Clovelly')
+
 
 #%% start seasonality  analysis
 

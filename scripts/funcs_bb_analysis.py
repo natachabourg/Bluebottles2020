@@ -388,7 +388,7 @@ def correlation_btwn_variables(nb_beach,path_fig,
     
     Outputs : 
         - correlation coefficients between bb and sst, cross shelf, along shelf winds, 
-        wind_dir and wind_speed 
+        wind_dir and wind_speed at the weekly timescale 
     
     """
     
@@ -442,7 +442,20 @@ def correlation_btwn_variables(nb_beach,path_fig,
     'wind_speed':wind_speed})
     
     
-    corr = df.corr()
+    
+    df2 = pd.DataFrame({'bb': df['bb'].groupby(df.index.week).mean(),
+                        'sst': df['sst'].groupby(df.index.week).mean(),
+                        'cross shelf 25': df['cross shelf 25'].groupby(df.index.week).mean(),
+    
+                        'along shelf 25': df['along shelf 25'].groupby(df.index.week).mean(),
+    
+                        'wind_dir': df['wind_dir'].groupby(df.index.week).mean(),
+                        'wind_speed': df['wind_speed'].groupby(df.index.week).mean(),
+
+                        })
+    
+    #stats.pearsonr(df2['bb'], df2['sst'])
+    corr = df2.corr()
     
     """svm = sns.heatmap(corr[['bb']].sort_values(by=['bb'],ascending=True), 
                       linewidths=0.1, square=True, 
@@ -779,14 +792,193 @@ def summer_rose_plot_map(date_summer_stings,date_summer,bb_summer,date_BOM,ws,wd
     
 
 
+def plot_intro_fig(path_data,path_fig):
+    from matplotlib.offsetbox import TextArea, DrawingArea, OffsetImage, AnnotationBbox
+    from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes
+    import matplotlib.pyplot as plt
+    import matplotlib.image as mpimg
+    
+    coast_file = path_data+'eaccoast.dat'
+    coast = np.loadtxt(coast_file)
+    
+    
+    c_mar_0 = coast[:,0][np.logical_and(coast[:,1]>-33.9575,coast[:,1]<-33.9469)]
+    c_mar_1 = coast[:,1][np.logical_and(coast[:,1]>-33.9575,coast[:,1]<-33.9469)]
+    
+    
+    c_coog_0 = coast[:,0][np.logical_and(coast[:,1]>-33.9263,coast[:,1]<-33.9197)]
+    c_coog_1 = coast[:,1][np.logical_and(coast[:,1]>-33.9263,coast[:,1]<-33.9197)]
+    
+    
+    c_clov_0 = coast[:,0][np.logical_and(coast[:,1]>-33.9179,coast[:,1]<-33.9161)]
+    c_clov_1 = coast[:,1][np.logical_and(coast[:,1]>-33.9179,coast[:,1]<-33.9161)]
+    from matplotlib_scalebar.scalebar import ScaleBar
+    from mpl_toolkits.axes_grid1.inset_locator import mark_inset
+    #--- plot --
+    from mpl_toolkits.basemap import Basemap
+    import matplotlib.patches as patches
+    from matplotlib.collections import PatchCollection
+    
+    c_beach = 'goldenrod'
+    fig, ax = plt.subplots(figsize=(14,9))
+    
+    ax.plot(coast[:,0],coast[:,1],'k',lw=3)
+    ax.set_xlim(151,151.67)
+    ax.set_ylim(-34.2,-33.7)
+    ax.plot(c_mar_0[c_mar_0>151.26],c_mar_1[c_mar_0>151.26],
+            c=c_beach,
+            lw=3)
+    
+    ax.plot(c_coog_0,c_coog_1,
+            c=c_beach,
+            lw=3)
+    
+    ax.plot(c_clov_0[c_clov_0>151.275],c_clov_1[c_clov_0>151.275],
+            c=c_beach,
+            lw=3)
+    
+    ax.scatter( 151.1989440996304,-34.01902648408814,marker='D',zorder=10,
+               s=300,color='rosybrown')
+    
+
+    ax.scatter( 151.20677125384697,-33.87778974589557,marker='o',zorder=10,color='grey',
+           s=70)
+    
+    
+    ax.text(151.18,-33.892,'Sydney',fontstyle='oblique',fontweight='bold',fontsize=13,c='grey')
+    ax.text(151.2,-34.0,'KN',fontstyle='oblique',fontweight='bold',fontsize=13,c='rosybrown')
+
+    zoom=3.7
+    axins2 = zoomed_inset_axes(ax, zoom, loc=1) # zoom = 6
 
 
+    axins2.annotate('1km', # this is the text
+                    xy=(151.25,-33.962),
+                 xytext=(151.25,-33.962), # this is the point to label
+                 textcoords="data", # how to position the text
+                 xycoords='data',
+                 ha='center',zorder=10) # horizontal alignment can be left, right or center
+    xa = np.linspace(151.245,151.245+0.009)
+    ya = np.ones(xa.shape)*-33.958
+    axins2.plot(xa,ya,color='black',linewidth=3,clip_on=True)
 
 
+    axins2.plot(coast[:,0],coast[:,1],'k',lw=3)
+    axins2.set_xlim(151.1,151.57)
+    axins2.set_ylim(-34.25,-33.5)
+    axins2.plot(c_mar_0[c_mar_0>151.26],c_mar_1[c_mar_0>151.26],
+            c=c_beach,
+            lw=3)
+    
+    axins2.plot(c_coog_0,c_coog_1,
+            c=c_beach,
+            lw=3)
+    
+    axins2.plot(c_clov_0[c_clov_0>151.275],c_clov_1[c_clov_0>151.275],
+            c=c_beach,
+            lw=3)
+    
+    axins2.set_xlim(151.24,151.3)
+    axins2.set_ylim(-33.9639,-33.90)
+    axins2.fill_betweenx(coast[:,1],coast[:,0],x2=151.2,
+                 hatch='/',facecolor='None',
+                 edgecolor='lightgrey',
+                 alpha=0.9)
+    
+    axins2.text(151.262,-33.9145,'Clovelly',fontstyle='oblique',fontweight='bold',fontsize=13,c=c_beach)
+    axins2.text(151.2525,-33.922, 'Coogee',fontstyle='oblique',fontweight='bold',fontsize=13,c=c_beach)
+    axins2.text(151.247,-33.95,'Maroubra',fontstyle='oblique',fontweight='bold',fontsize=13,c=c_beach)
+    
+    x, y, arrow_length = 0.95, 0.97, 0.09
+    axins2.annotate('N', xy=(x, y), xytext=(x, y-arrow_length),
+                arrowprops=dict(facecolor='black', width=5, headwidth=15),
+                ha='center', va='center', fontsize=20,
+                xycoords=ax.transAxes)
+        
+    axins2.set_xticks([])  # Not present ticks
+    axins2.set_yticks([])
+    #
+    ## draw a bbox of the region of the inset axes in the parent axes and
+    ## connecting lines between the bbox and the inset axes area
+    mark_inset(ax, axins2, loc1=2, loc2=4, fc="none", ec="0.5")
+
+    axin = ax.inset_axes([0,0.8,0.2,0.2])
+    axin.set_axis_off()
+    
+    m = Basemap(resolution='c',
+                projection='merc',
+                llcrnrlat = -50,
+                llcrnrlon = 100,
+                urcrnrlat = 0,
+                urcrnrlon = 160) # lat 0, lon 0
+    
+    m.drawcoastlines(ax=axin,linewidth=2,zorder=0)
+    lon = 151
+    lat = -34
+    x,y = m(lon, lat)
+    axin.plot(x, y, linestyle='none',marker='o',markerfacecolor=c_beach, 
+                  markeredgecolor=c_beach,markersize=10)
+ 
+    from matplotlib.cbook import get_sample_data
+    
+    
+    xy = [151.3, -34.0]
+    path_img = '/media/natachab/Elements/fac/M1SOAC/stage_m1/scripts_results/writing/direction_categories.png'
+    fn = get_sample_data(path_img, asfileobj=False)
+    arr_img = plt.imread(fn, format='png')
+
+    imagebox = OffsetImage(arr_img, zoom=0.24)
+    imagebox.image.axes = ax
+    
+
+    ab = AnnotationBbox(imagebox, xy,
+                        xybox=(120., -80.),
+                        xycoords='data',
+                        boxcoords="offset points",
+                        pad=0.5,
+                        frameon=False,
+                        arrowprops=dict(
+                            arrowstyle="->",
+                            connectionstyle="angle,angleA=0,angleB=90,rad=3",
+                            alpha=0)
+                        )
+    ax.add_artist(ab)
+
+    fig.savefig(path_fig+'map_intro.pdf')
 
 
+    
+ 
 
+def full_moon(date_none,date_observed,lag,title):
+    phase_n = []
+    phase_o = []
+    for d_n,d_o in zip(date_none,date_observed):
+        mi = pylunar.MoonInfo((-33, 51, 55), (151, 12, 36))
+        d_l_n = d_n-datetime.timedelta(days=lag)
+        d_l_o = d_o-datetime.timedelta(days=lag)
 
+        mi.update((d_l_n.year,d_l_n.month,d_l_n.day,12,0))
+        phase_n.append(mi.fractional_phase())
+        mi.update((d_l_o.year,d_l_o.month,d_l_o.day,12,0))
+        phase_o.append(mi.fractional_phase())        
+        
+    phase_n = np.array(phase_n)
+    phase_o = np.array(phase_o)
+    #return phase
+    fig,ax=plt.subplots()
+    ax.grid(zorder=0,c='lightgrey')
+
+    ax.hist(phase_n,bins=10,zorder=3,linewidth=2,alpha=0.2,color='limegreen', weights=np.ones(len(phase_n)) / len(phase_n))
+    ax.hist(phase_o,bins=10,zorder=3,linewidth=2,alpha=0.6,color='skyblue', weights=np.ones(len(phase_o)) / len(phase_o))
+    
+    ax.hist(phase_n,bins=10,label='None',zorder=3,linewidth=2,histtype='step',color='limegreen', weights=np.ones(len(phase_n)) / len(phase_n))
+    ax.hist(phase_o,bins=10,label='Observed',zorder=3,linewidth=2,histtype='step',color='skyblue', weights=np.ones(len(phase_o)) / len(phase_o))
+    ax.legend()
+    ax.set_xlabel('Fractional phase')
+    ax.set_ylabel('Frequency')
+    ax.set_title(title+' (lag '+str(lag)+' days)')
+    #fig.savefig('../figs/hist_moon_phase'+str(title)+'_lag'+str(lag)+'.png',dpi=500)
 
 
 

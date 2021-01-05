@@ -25,6 +25,7 @@ from windrose import plot_windrose
 import seaborn as sns
 from windrose import WindroseAxes
 import cmocean as cmo
+import pylunar
 
 class time:
     def __init__(self, day, month, year):
@@ -445,7 +446,7 @@ def winter(date):
     """
     
     months = np.array([getattr(d,'month') for d in date])
-    date_win = date[np.logical_or(months <= 8, months >= 6)]
+    date_win = date[np.logical_and(months <= 8, months >= 6)]
 
     return date_win
 
