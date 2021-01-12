@@ -482,6 +482,10 @@ def chances_of_beachings_wd(wd, date_BOM, date_none, date_obs, beach):
     
     """
     dates_wind = np.array([pd.to_datetime(d) for d in date_BOM])
+    date_none = np.array([pd.to_datetime(d) for d in date_none])
+    date_obs = np.array([pd.to_datetime(d) for d in date_obs])
+
+    
     
     NE=np.where(np.logical_and(wd>11.25, wd<=101.25))
     SE=np.where(np.logical_and(wd>101.25, wd<=191.25))
@@ -788,9 +792,6 @@ def summer_rose_plot_map(date_summer_stings,date_summer,bb_summer,date_BOM,ws,wd
                 )
     fig.savefig(folder+'fig_map_rose.pdf')      
     
-    
-    
-
 
 def plot_intro_fig(path_data,path_fig):
     from matplotlib.offsetbox import TextArea, DrawingArea, OffsetImage, AnnotationBbox
@@ -947,24 +948,26 @@ def plot_intro_fig(path_data,path_fig):
     fig.savefig(path_fig+'map_intro.pdf')
 
 
-    
- 
-
 def full_moon(date_none,date_observed,lag,title):
     phase_n = []
     phase_o = []
-    for d_n,d_o in zip(date_none,date_observed):
+    
+    for d_n in date_none:
+        d_n = d_n-datetime.timedelta(days=lag)
         mi = pylunar.MoonInfo((-33, 51, 55), (151, 12, 36))
-        d_l_n = d_n-datetime.timedelta(days=lag)
-        d_l_o = d_o-datetime.timedelta(days=lag)
-
-        mi.update((d_l_n.year,d_l_n.month,d_l_n.day,12,0))
+        mi.update((d_n.year,d_n.month,d_n.day,12,0))
         phase_n.append(mi.fractional_phase())
-        mi.update((d_l_o.year,d_l_o.month,d_l_o.day,12,0))
-        phase_o.append(mi.fractional_phase())        
+        
+    for d_o in date_observed:
+        d_o= d_o-datetime.timedelta(days=lag)
+        mi = pylunar.MoonInfo((-33, 51, 55), (151, 12, 36))
+        mi.update((d_o.year,d_o.month,d_o.day,12,0))
+        phase_o.append(mi.fractional_phase())
         
     phase_n = np.array(phase_n)
     phase_o = np.array(phase_o)
+    
+    #return phase_n,phase_o
     #return phase
     fig,ax=plt.subplots()
     ax.grid(zorder=0,c='lightgrey')
@@ -977,16 +980,5 @@ def full_moon(date_none,date_observed,lag,title):
     ax.legend()
     ax.set_xlabel('Fractional phase')
     ax.set_ylabel('Frequency')
-    ax.set_title(title+' (lag '+str(lag)+' days)')
     #fig.savefig('../figs/hist_moon_phase'+str(title)+'_lag'+str(lag)+'.png',dpi=500)
-
-
-
-
-
-
-
-
-
-
 
