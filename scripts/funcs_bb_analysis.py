@@ -61,7 +61,7 @@ def season_diff_between_beaches(bluebottles, date, idx_beaching, path_fig):
     ax.barh(x, mam, left=bars_1, color=c,label='Autumn',zorder=3)
     ax.barh(x, jja, left=bars_2, color=d,label = 'Winter',zorder=3)
     fig.legend(loc = 'upper center',ncol=4)
-    ax.set_xlabel('Total occurences of beachings',fontsize = 10)
+    ax.set_xlabel('Occurrence count from 2016 to 2020 (# of days)',fontsize = 10)
 
     #Set location of text
     y_loc = [0.98,1.98,2.98]    
@@ -126,7 +126,6 @@ def seasonal_cycle_plot(nb_beach,path_fig,
 
     b=nb_beach
     location = ['Clovelly', 'Coogee', 'Maroubra']
-
     
     # ---- put in datafram and groupby year ----- #
     df_none = pd.DataFrame({'none' : date_none[b]})
@@ -227,14 +226,14 @@ def seasonal_cycle_plot(nb_beach,path_fig,
     
     fig, (ax2,ax,ax_new) = plt.subplots(3,1,figsize=(7,10))
     ax1 = ax.twinx()
-    ax.text(0,45,'B',fontweight='bold',fontsize=22)
-    ax.set_ylabel('Frequency of beaching events [%]', fontsize=10)
+    ax.text(0,4,'b)',fontweight='bold',fontsize=22)
+    ax.set_ylabel('Beaching events per week (# of days)', fontsize=10)
     bins=np.arange(1,54)
     ax.set_xticks(bins[:-1])
     #ax.set_xlabel('Week #',fontsize=10)
     
-    mean = np.nanmean(obs_all,axis=0)*100
-    std = np.nanstd(obs_all,axis=0)*100
+    mean = np.nanmean(obs_all,axis=0)*7
+    std = np.nanstd(obs_all,axis=0)*7
     ax.bar(week,mean,width=0.4,color='slategray',align='center',label='observed',alpha=0.8)
 
     #ax.plot(week,mean,color='black',label='observed',alpha=0.6)
@@ -275,7 +274,7 @@ def seasonal_cycle_plot(nb_beach,path_fig,
     cb = fig.colorbar(sc,cax=axins,orientation='horizontal',label='Cross shelf wind velocity [m.s$^{-1}$]')
     cb.ax.xaxis.set_ticks_position('top')
     cb.ax.xaxis.set_label_position('top')
-    ax1.set_ylabel('Cross shelf wind velocity [m.s$^{-1}$]',fontsize=10)
+    ax1.set_ylabel('Cross shelf wind velocity [m s$^{-1}$]',fontsize=10)
     
     
     
@@ -283,7 +282,7 @@ def seasonal_cycle_plot(nb_beach,path_fig,
     ax3 = ax2.twinx()
     #ax2.set_ylabel('Frequency of beaching events [%]', fontsize=10)
     bins=np.arange(1,54)
-    ax2.text(0,45,'A',fontweight='bold',fontsize=22)
+    ax2.text(0,4,'a)',fontweight='bold',fontsize=22)
 
     ax2.set_xticks(bins[:-1])
     #ax2.set_xlabel('Week #',fontsize=10)
@@ -330,8 +329,7 @@ def seasonal_cycle_plot(nb_beach,path_fig,
     #ax_new.set_ylabel('Frequency of beaching events [%]', fontsize=10)
     bins=np.arange(1,54)
     ax_new.set_xticks(bins[:-1])
-    ax_new.set_xlabel('Week #',fontsize=10)
-    ax_new.text(0,45,'C',fontweight='bold',fontsize=22)
+    ax_new.text(0,4,'c)',fontweight='bold',fontsize=22)
 
     ax_new.bar(week,mean,width=0.4,color='slategray',align='center',label='observed',alpha=0.8)
     #ax_new.plot(week,mean,color='black',label='observed',alpha=0.6)
@@ -345,11 +343,13 @@ def seasonal_cycle_plot(nb_beach,path_fig,
     
     ax_new.xaxis.set_major_locator(plt.MaxNLocator(10))
     ax4.plot(week,wind_speed.groupby(Wind_u_rot.index.week).mean(),color='grey',zorder=1)
-    
     u_mean = U.groupby(U.index.week).mean()
     v_mean = V.groupby(V.index.week).mean()
     (rho,phi) = cart2pol(u_mean,v_mean)
     direc_colors = rad2deg360(phi)
+    
+    
+    
     
     clrs = np.chararray(direc_colors.shape,itemsize=20)
     clrs[np.logical_and(direc_colors<=101.25,direc_colors>11.25)]='mediumseagreen'
@@ -360,15 +360,18 @@ def seasonal_cycle_plot(nb_beach,path_fig,
     for i in range(1,len(clrs)):
         sc=ax4.scatter(week[i-1], wind_speed.groupby(Wind_u_rot.index.week).mean()[i], 
                        #c=wind_dir.groupby(Wind_u_rot.index.week).mean(), 
-                       c = str(clrs[i])[2:-1], 
+                       c = 'k', 
                        zorder=2,
                        s=45)
 
 
-    ax4.set_ylabel('Wind speed [m.s$^{-1}$]',fontsize=10)
+    ax4.set_ylabel('Wind speed [m s$^{-1}$]',fontsize=10)
         
+    for a in [ax,ax2,ax4]:
+        a.set_xticks([1,5,9,13.43,17.57,22.14 ,26.3, 31-1/7  ,35+2/7,40-3/7,44,48+2/7])
+        a.set_xticklabels(['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'])
     fig.tight_layout(pad=4.0)
-    fig.savefig(path_fig+'seasonal_cycle_'+str(location[nb_beach])+'.pdf')
+    fig.savefig(path_fig+'seasonal_cycle_2'+str(location[nb_beach])+'.pdf')
 
 
 
@@ -391,72 +394,86 @@ def correlation_btwn_variables(nb_beach,path_fig,
         wind_dir and wind_speed at the weekly timescale 
     
     """
-    
+    df2=[]
     b=nb_beach
     location = ['Clovelly','Coogee','Maroubra']
-    #Take data
-    date_wind = np.array([pd.to_datetime(d) for d in date_BOM])
-    time = np.array([pd.to_datetime(d) for d in date[b][0:-1]]) #01/06/2018 --> 01/06/2019 685:1033
-    bb = bluebottles[b][0:-1] #last index in excess
-    dates_bb = date[b][0:-1]
-    sst = water_temp[b][0:-1]
-    
-    #find index of BOM data of the period of interest (both wind and lifeguard observations)
-    i_time_BOM = np.isin(date_wind[:], time[:]) 
-    i_time_bb = np.isin(time[:], date_wind) 
+    for yr in range(2016,2021):
+        date_BOM_yr = date_BOM[date_BOM.year==yr]
+        wdd_meteo_deg = wd_meteo_deg[date_BOM.year==yr]
+        wss = ws[date_BOM.year==yr]
 
-    #Many = Observed
-    bb2 = bb[i_time_bb]
-    bb2[bb2==2] = 1
+        #Take data
+        date_wind = np.array([pd.to_datetime(d) for d in date_BOM_yr])
+        time = np.array([pd.to_datetime(d) for d in date[b][0:-1]]) #01/06/2018 --> 01/06/2019 685:1033
     
-    wat_temp = sst[i_time_bb]
-    time_bb = dates_bb[i_time_bb]
+    
+        bb = bluebottles[b][0:-1] #last index in excess
+        dates_bb = date[b][0:-1]
+        sst = water_temp[b][0:-1]
         
-    #Get wind data for ws and wd categories
-    wind_dir = wd_meteo_deg[i_time_BOM] 
-    wind_speed = ws[i_time_BOM]
+        #find index of BOM data of the period of interest (both wind and lifeguard observations)
+        i_time_BOM = np.isin(date_wind[:], time[:]) 
+        i_time_bb = np.isin(time[:], date_wind) 
     
+        #Many = Observed
+        bb2 = bb[i_time_bb]
+        bb2[bb2==2] = 1
+        
+        wat_temp = sst[i_time_bb]
+        time_bb = dates_bb[i_time_bb]
+        
+        #Get wind data for ws and wd categories
+        wind_dir = wdd_meteo_deg[i_time_BOM] 
+        wind_speed = wss[i_time_BOM]
+        
+        
+        #Get wind data for cross shelf 
+        U = df_BOM['Wind_u_ms']
+        V = df_BOM['Wind_v_ms']
+        
+        UU = U[date_BOM.year==yr]
+        VV = V[date_BOM.year==yr]
+        
+        U = UU[i_time_BOM] #U and V in oceao 
+        V = VV[i_time_BOM]
+        time_wind = date_wind[i_time_BOM]
     
-    #Get wind data for cross shelf 
-    U = df_BOM['Wind_u_ms']
-    V = df_BOM['Wind_v_ms']
+        
+        rot_deg_angle = - 25
+        Wind_u_rot_25 = np.cos(rot_deg_angle * np.pi / 180) * U + np.sin(rot_deg_angle * np.pi / 180) * V;  #  cross-shelf 
+        Wind_v_rot_25 = - np.sin(rot_deg_angle * np.pi / 180) * U + np.cos(rot_deg_angle * np.pi / 180) * V;
+        
+        
+        df = pd.DataFrame({'bb':bb2,
+                           
+        'sst' : wat_temp,
+        
+        'cross shelf 25':Wind_u_rot_25,
+        'along shelf 25' : Wind_v_rot_25,
+        
+        'wind_dir':wind_dir,
+        'wind_speed':wind_speed})
+        
+        
+        
+        df2.append(pd.DataFrame({'bb': df['bb'].groupby(df.index.week).mean(),
+                            'sst': df['sst'].groupby(df.index.week).mean(),
+                            'cross shelf 25': df['cross shelf 25'].groupby(df.index.week).mean(),
+        
+                            'along shelf 25': df['along shelf 25'].groupby(df.index.week).mean(),
+        
+                            'wind_dir': df['wind_dir'].groupby(df.index.week).mean(),
+                            'wind_speed': df['wind_speed'].groupby(df.index.week).mean(),
     
-    U = U[i_time_BOM] #U and V in oceao 
-    V = V[i_time_BOM]
-    time_wind = date_wind[i_time_BOM]
-
+                            }))
+        print(yr)
+    bb_all = np.concatenate([df2[1]['bb'], df2[2]['bb'],df2[3]['bb'], df2[4]['bb'], ])
+    sst_all = np.concatenate([df2[1]['sst'], df2[2]['sst'],df2[3]['sst'], df2[4]['sst'], ])
+    cs_all = np.concatenate([ df2[1]['cross shelf 25'], df2[2]['cross shelf 25'],df2[3]['cross shelf 25'], df2[4]['cross shelf 25'], ])
+    wd_all = np.concatenate([ df2[1]['wind_dir'], df2[2]['wind_dir'],df2[3]['wind_dir'], df2[4]['wind_dir'], ])
     
-    rot_deg_angle = - 25
-    Wind_u_rot_25 = np.cos(rot_deg_angle * np.pi / 180) * U + np.sin(rot_deg_angle * np.pi / 180) * V;  #  cross-shelf 
-    Wind_v_rot_25 = - np.sin(rot_deg_angle * np.pi / 180) * U + np.cos(rot_deg_angle * np.pi / 180) * V;
-    
-    
-    df = pd.DataFrame({'bb':bb2,
-                       
-    'sst' : wat_temp,
-    
-    'cross shelf 25':Wind_u_rot_25,
-    'along shelf 25' : Wind_v_rot_25,
-    
-    'wind_dir':wind_dir,
-    'wind_speed':wind_speed})
-    
-    
-    
-    df2 = pd.DataFrame({'bb': df['bb'].groupby(df.index.week).mean(),
-                        'sst': df['sst'].groupby(df.index.week).mean(),
-                        'cross shelf 25': df['cross shelf 25'].groupby(df.index.week).mean(),
-    
-                        'along shelf 25': df['along shelf 25'].groupby(df.index.week).mean(),
-    
-                        'wind_dir': df['wind_dir'].groupby(df.index.week).mean(),
-                        'wind_speed': df['wind_speed'].groupby(df.index.week).mean(),
-
-                        })
-    
-    #stats.pearsonr(df2['bb'], df2['sst'])
+    #stats.pearsonr(df2['bb'], np.roll(df2['sst'],14))
     corr = df2.corr()
-    
     """svm = sns.heatmap(corr[['bb']].sort_values(by=['bb'],ascending=True), 
                       linewidths=0.1, square=True, 
                       cmap='jet', linecolor='white', annot=True)"""
@@ -510,7 +527,7 @@ def chances_of_beachings_wd(wd, date_BOM, date_none, date_obs, beach):
     return chances_NE, chances_SE, chances_SW, chances_NW
 
 
-def summer_rose_plot_map(date_summer_stings,date_summer,bb_summer,date_BOM,ws,wd_meteo_deg,folder,path_data):
+def summer_rose_plot_map(date_summer_stings,date_summer,bb_summer,date_BOM,ws,wd_meteo_deg,folder,path_data,wd3,ws3):
     """
     Input : 
     sting observations (date_summer_stings)
@@ -530,8 +547,8 @@ def summer_rose_plot_map(date_summer_stings,date_summer,bb_summer,date_BOM,ws,wd
     wd2 = []
     ws2 = []
     
-    wd3 = []
-    ws3 = []
+    #wd3 = []
+    #ws3 = []
     for nb_beach in range(0,3):
         location = ['Clovelly', 'Coogee', 'Maroubra']
         
@@ -575,8 +592,8 @@ def summer_rose_plot_map(date_summer_stings,date_summer,bb_summer,date_BOM,ws,wd
         wd1.append(df2['direction'])
         ws1.append(df2['speed'])
     
-        wd3.append(df3['direction'])
-        ws3.append(df3['speed'])                          
+        #wd3.append(df3['direction'])
+        #ws3.append(df3['speed'])                          
         
         
         
@@ -790,8 +807,86 @@ def summer_rose_plot_map(date_summer_stings,date_summer,bb_summer,date_BOM,ws,wd
                                 linewidth=2),
                                 zorder=1
                 )
-    fig.savefig(folder+'fig_map_rose.pdf')      
+    fig.savefig(folder+'fig_map_rose_new.pdf')      
+
+
+def plot_intro_fig2(path_data,path_fig):
+    from matplotlib.offsetbox import TextArea, DrawingArea, OffsetImage, AnnotationBbox
     
+    from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes
+    import matplotlib.pyplot as plt
+    import matplotlib.image as mpimg
+    
+    coast_file = path_data+'eaccoast.dat'
+    coast = np.loadtxt(coast_file)
+    
+    
+    c_mar_0 = coast[:,0][np.logical_and(coast[:,1]>-33.9575,coast[:,1]<-33.9469)]
+    c_mar_1 = coast[:,1][np.logical_and(coast[:,1]>-33.9575,coast[:,1]<-33.9469)]
+    
+    
+    c_coog_0 = coast[:,0][np.logical_and(coast[:,1]>-33.9263,coast[:,1]<-33.9197)]
+    c_coog_1 = coast[:,1][np.logical_and(coast[:,1]>-33.9263,coast[:,1]<-33.9197)]
+    
+    
+    c_clov_0 = coast[:,0][np.logical_and(coast[:,1]>-33.9179,coast[:,1]<-33.9161)]
+    c_clov_1 = coast[:,1][np.logical_and(coast[:,1]>-33.9179,coast[:,1]<-33.9161)]
+    from matplotlib_scalebar.scalebar import ScaleBar
+    from mpl_toolkits.axes_grid1.inset_locator import mark_inset
+    #--- plot --
+    from mpl_toolkits.basemap import Basemap
+    import matplotlib.patches as patches
+    from matplotlib.collections import PatchCollection
+    
+    c_beach = 'goldenrod'
+    fig, ax = plt.subplots(figsize=(8,10))
+    ax.spines['right'].set_visible(False)
+    ax.spines['top'].set_visible(False)
+    ax.set_xlabel('Longitude [°]',fontsize=13)
+    ax.set_ylabel('Latitude[°]',fontsize=13)
+    ax.plot(coast[:,0],coast[:,1],'k',lw=3)
+    ax.set_xlim(151,151.4)
+    ax.set_ylim(-34.2,-33.7)
+    ax.set_xticks(np.arange(151,151.5,step=0.1))
+    ax.plot(c_mar_0[c_mar_0>151.26],c_mar_1[c_mar_0>151.26],
+            c=c_beach,
+            lw=3)
+    
+    ax.plot(c_coog_0,c_coog_1,
+            c=c_beach,
+            lw=3)
+    
+    ax.plot(c_clov_0[c_clov_0>151.275],c_clov_1[c_clov_0>151.275],
+            c=c_beach,
+            lw=3)
+    
+    ax.scatter( 151.1989440996304,-34.01902648408814,marker='D',zorder=10,
+               s=300,color='rosybrown')
+    
+    
+    ax.scatter( 151.20677125384697,-33.87778974589557,marker='o',zorder=10,color='grey',
+           s=70)
+    
+    
+    ax.text(151.18,-33.892,'Sydney',fontstyle='oblique',fontweight='bold',fontsize=13,c='grey')
+    ax.text(151.2,-34.0,'KN',fontstyle='oblique',fontweight='bold',fontsize=13,c='rosybrown')
+    axin = ax.inset_axes([0.9,0.82,0.2,0.2])
+    axin.set_axis_off()
+    
+    m = Basemap(resolution='c',
+                projection='merc',
+                llcrnrlat = -50,
+                llcrnrlon = 100,
+                urcrnrlat = 0,
+                urcrnrlon = 160) # lat 0, lon 0
+    
+    m.drawcoastlines(ax=axin,linewidth=2,zorder=0)
+    lon = 151
+    lat = -34
+    x,y = m(lon, lat)
+    axin.plot(x, y, linestyle='none',marker='o',markerfacecolor=c_beach, 
+                  markeredgecolor=c_beach,markersize=10)
+    fig.savefig(path_fig+'map_intro2.pdf')
 
 def plot_intro_fig(path_data,path_fig):
     from matplotlib.offsetbox import TextArea, DrawingArea, OffsetImage, AnnotationBbox

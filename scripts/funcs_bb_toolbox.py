@@ -46,7 +46,7 @@ def GetVariables(filename,version):
     """
     Return date, water temp, #of bluebottles of a file
     """
-    date, datee, water_temp, bluebottles, description = [], [], [], [], []
+    date, datee, water_temp, bluebottles, description, wave_height = [], [], [], [], [], []
     for i in range(0,len(filename)):
         day=''
         month=''
@@ -69,19 +69,37 @@ def GetVariables(filename,version):
             month = filename.Name[i].month
             year = filename.Name[i].year
         
+        datee.append(time(str(day),str(month),str(year)))
+        
         if filename.Water_temp[i]!=14: #dont take values for water_temp=14C
-            datee.append(time(str(day),str(month),str(year)))
             water_temp.append(filename.Water_temp[i])
-            description.append(filename.Description[i])
-            if filename.Bluebottles[i]=='none' or filename.Bluebottles[i]=='likely':
-                bluebottles.append(0.)
-            elif filename.Bluebottles[i]=='some':
-                bluebottles.append(1.)
-            elif filename.Bluebottles[i]=='many':
-                bluebottles.append(2.)
+        else:
+            water_temp.append(np.nan)
+
+        description.append(filename.Description[i])
+        
+        if filename.Wave_height[i][0]=='b':
+            wave_height.append(0)
+        elif filename.Wave_height[i][1]=='o':
+            wave_height.append(0.5)
+        elif filename.Wave_height[i][-1]=='l':
+            wave_height.append(1)
+        elif filename.Wave_height[i][4]=='p':
+            wave_height.append(1.5)
+        elif filename.Wave_height[i][0]=='t':
+            wave_height.append(2)
+        elif filename.Wave_height[i][1]=='l':
+            wave_height.append(3)
+        
+        if filename.Bluebottles[i]=='none' or filename.Bluebottles[i]=='likely':
+            bluebottles.append(0.)
+        elif filename.Bluebottles[i]=='some':
+            bluebottles.append(1.)
+        elif filename.Bluebottles[i]=='many':
+            bluebottles.append(2.)
 
     middle_date = []
-    final_date, final_water_temp, final_bluebottles, final_description = [], [], [], []
+    final_date, final_water_temp, final_bluebottles, final_description, final_wave = [], [], [], [], []
     for l in range(len(datee)):
         middle_date.append(datetime.date(int(datee[l].year), int(datee[l].month), int(datee[l].day)))
     
@@ -89,6 +107,7 @@ def GetVariables(filename,version):
     final_water_temp.append(water_temp[0])
     final_bluebottles.append(bluebottles[0])
     final_description.append(description[0])
+    final_wave.append(wave_height[0])
     
     for l in range(1,len(middle_date)):  
         if middle_date[l]!=middle_date[l-1]: #to only have one value per day
@@ -96,9 +115,9 @@ def GetVariables(filename,version):
             final_water_temp.append(water_temp[l])
             final_bluebottles.append(bluebottles[l])
             final_description.append(description[l])
-            
+            final_wave.append(wave_height[l])
     
-    return final_date, final_water_temp, final_bluebottles, final_description
+    return final_date, final_water_temp, final_bluebottles, final_description,final_wave
 
 
 
@@ -184,18 +203,20 @@ def gather_data(path_obs, files_name_old, files_name_new):
     water_temp=[0,1,2]
     bluebottles=[0,1,2]
     description=[0,1,2]
+    wave = [0,1,2]
     
     date_bb_new=[0,1,2]
     date_new=[0,1,2]
     water_temp_new=[0,1,2]
     bluebottles_new=[0,1,2]
     description_new=[0,1,2]
+    wave_new = [0,1,2]
     
     for i in range(0,len(files_name_old)):
-        date_bb[i],water_temp[i], bluebottles[i], description[i] = GetVariables(beach_old[i],'old')
+        date_bb[i],water_temp[i], bluebottles[i], description[i], wave[i] = GetVariables(beach_old[i],'old')
     
     for i in range(0, len(files_name_new)):
-        date_bb_new[i],water_temp_new[i], bluebottles_new[i], description_new[i] = GetVariables(beach_new[i],'new')
+        date_bb_new[i],water_temp_new[i], bluebottles_new[i], description_new[i], wave_new[i] = GetVariables(beach_new[i],'new')
     
 
     #delete data before 05/2016
@@ -212,6 +233,9 @@ def gather_data(path_obs, files_name_old, files_name_new):
     description[1]=description[1][:1036]
     description[2]=description[2][:1025] 
     
+    wave[1]=wave[1][:1036]
+    wave[2]=wave[2][:1025]     
+    
     #concatenate variables from old and new files
 
     
@@ -220,8 +244,9 @@ def gather_data(path_obs, files_name_old, files_name_new):
         water_temp[i] = np.concatenate([water_temp[i], water_temp_new[i]])
         bluebottles[i] = np.concatenate([bluebottles[i], bluebottles_new[i]])
         description[i] = np.concatenate([description[i], description_new[i]])
+        wave[i] = np.concatenate([wave[i], wave_new[i]])
         
-    return date, water_temp, bluebottles, description
+    return date, water_temp, bluebottles, description, wave
 
 
 
@@ -308,7 +333,7 @@ def get_kurnell_data_as_modified(folder):
     
     """
     times_dates_local = [datetime.datetime(df_BOM.year[i], df_BOM.month[i], df_BOM.day[i], df_BOM.hour[i], df_BOM.minute[i], 0, 0) for i in range(len(df_BOM)) ]
-    times_dates_shifted = [t-datetime.timedelta(hours=9) for t in times_dates_local]
+    times_dates_shifted = [t-datetime.timedelta(hours=9) for t in times_dates_local] #SOULD BE 9
 
 
     times_dates_UTC = fun_SYDdatetime2UTC(times_dates_local)
